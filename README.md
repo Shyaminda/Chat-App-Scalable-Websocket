@@ -10,6 +10,13 @@ A high-performance, scalable chat application leveraging WebSocket communication
 - **Redis** – Pub/Sub broker for scalability
 - **Docker** – Redis containerization (for development)
 
+## 📊 System Architecture
+The system works by forwarding any message sent by a user to Redis Pub/Sub, which then broadcasts it back to all users subscribed to the same room, ensuring efficient and targeted message delivery.
+<details>
+  <summary>System Design</summary>
+  <img src="/public/assets/image.png" alt="Screenshot 2" />
+</details>
+
 ## 📦 Getting Started
 
 ### 1. Prerequisites
@@ -120,6 +127,4 @@ All logic is contained in a single `index.ts` file for demonstration simplicity.
 This project is licensed under the ISC License.
 
 ---
-
-
 
