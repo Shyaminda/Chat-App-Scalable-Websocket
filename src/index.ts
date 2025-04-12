@@ -1,12 +1,24 @@
-import { WebSocketServer } from 'ws';
+import { WebSocket, WebSocketServer } from 'ws';
 
 const wss = new WebSocketServer({ port: 8080 });
 
+const users: {[key: string]: {
+    ws: WebSocket,
+    rooms: string[]
+}} = {};
+
 wss.on('connection', function connection(userSocket) {
-    userSocket.on('error', console.error);
+    const id = randomId();
+    users[id] = {
+        ws: userSocket,
+        rooms: []
+    };
 
     userSocket.on('message', function message(data) {
-        console.log('received: %s', data);
-        userSocket.send('you sent me' + data);
+        const parsedMessage = JSON.parse(data.toString());
     });
 });
+
+function randomId() {
+    return Math.random().toString(36).substring(2, 15);
+}
