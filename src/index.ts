@@ -26,6 +26,17 @@ wss.on('connection', function connection(userSocket) {
 
         if(parsedMessage.type === "SUBSCRIBE") {
             users[id].rooms.push(parsedMessage.room); //storing the room that the user want to subscribe to in users
+            if (oneUserSubscribedToRoom(parsedMessage.room)) { //if the room is not already subscribed by any user, then subscribe to redis channel
+                subscribeClient.subscribe(parsedMessage.room, (message) => {
+                    const parsedMessage = JSON.parse(message);
+                    Object.keys(users).forEach((userId) => {  //iterating over all users who are interested in the room connected by a specific user
+                        const { ws,rooms } = users[userId];
+                        if (rooms.includes(parsedMessage.roomId)) {
+                            ws.send(message);
+                        }
+                    })
+                })
+            }
         }
 
         if (parsedMessage.type === "UNSUBSCRIBE") {
@@ -37,12 +48,13 @@ wss.on('connection', function connection(userSocket) {
             const message = parsedMessage.message;
             const roomId = parsedMessage.roomId;
 
-            Object.keys(users).forEach((userId) => {  //iterating over all users who are interested in the room connected by a specific user
-                const { ws,rooms } = users[userId];
-                if (rooms.includes(roomId)) {
-                    ws.send(message);
-                }
-            })
+        
+
+            publishClient.publish(roomId, JSON.stringify({  //sending the message to redis channel
+                type: "sendMessage",
+                roomId: roomId,
+                message,
+            }))
         }
     });
 });
