@@ -41,8 +41,12 @@ wss.on('connection', function connection(userSocket) {
         }
 
         if (parsedMessage.type === "UNSUBSCRIBE") {
-            const roomId = parsedMessage.roomId;
-            users[id].rooms = users[id].rooms.filter((room) => room !== roomId); //removing the room from the user
+            users[id].rooms = users[id].rooms.filter((room) => room !== parsedMessage.room); //removing the room from the user
+
+            if (lastPersonLeftRoom(parsedMessage.roomId)) {
+                console.log("unsubscribing from the pub sub from room: ", parsedMessage.room);
+                subscribeClient.unsubscribe(parsedMessage.roomId); //if the user is the last person left in the room, then unsubscribe from redis channel
+            }
         }
 
         if(parsedMessage.type === "sendMessage") {
@@ -73,6 +77,21 @@ function oneUserSubscribedToRoom(roomId: string) {   //checking if any user is s
     }
 
     return false; //if already a user subscribed to the room then return false
+}
+
+function lastPersonLeftRoom(roomId: string) {
+    let totalInterestedUsers = 0;
+    Object.keys(users).map((userId) => {
+        if(users[userId].rooms.includes(roomId)) {
+            totalInterestedUsers++;
+        }
+    })
+
+    if (totalInterestedUsers == 0) {
+        return true;
+    }
+
+    return false;
 }
 
 function randomId() {
