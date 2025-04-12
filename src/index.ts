@@ -16,6 +16,22 @@ wss.on('connection', function connection(userSocket) {
 
     userSocket.on('message', function message(data) {
         const parsedMessage = JSON.parse(data.toString());
+
+        if(parsedMessage.type === "SUBSCRIBE") {
+            users[id].rooms.push(parsedMessage.room); //storing the room that the user want to subscribe to in users
+        }
+
+        if(parsedMessage.type === "sendMessage") {
+            const message = parsedMessage.message;
+            const roomId = parsedMessage.roomId;
+
+            Object.keys(users).forEach((userId) => {  //iterating over all users who are interested in the room connected by a specific user
+                const { ws,rooms } = users[userId];
+                if (rooms.includes(roomId)) {
+                    ws.send(message);
+                }
+            })
+        }
     });
 });
 
