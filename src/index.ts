@@ -26,6 +26,7 @@ wss.on('connection', function connection(userSocket) {
 
         if(parsedMessage.type === "SUBSCRIBE") {
             users[id].rooms.push(parsedMessage.room); //storing the room that the user want to subscribe to in users
+            console.log("subscribing on thr pub sub to room: ", parsedMessage.room);
             if (oneUserSubscribedToRoom(parsedMessage.room)) { //if the room is not already subscribed by any user, then subscribe to redis channel
                 subscribeClient.subscribe(parsedMessage.room, (message) => {
                     const parsedMessage = JSON.parse(message);
@@ -58,6 +59,21 @@ wss.on('connection', function connection(userSocket) {
         }
     });
 });
+
+function oneUserSubscribedToRoom(roomId: string) {   //checking if any user is subscribed to the room
+    let totalInterestedUsers = 0;
+    Object.keys(users).map((userId) => {
+        if(users[userId].rooms.includes(roomId)) {
+            totalInterestedUsers++;
+        }
+    })
+
+    if (totalInterestedUsers == 1) {
+        return true; //if no user is subscribed to the room, then return true
+    }
+
+    return false; //if already a user subscribed to the room then return false
+}
 
 function randomId() {
     return Math.random().toString(36).substring(2, 15);
