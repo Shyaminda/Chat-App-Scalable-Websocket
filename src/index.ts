@@ -1,4 +1,11 @@
 import { WebSocket, WebSocketServer } from 'ws';
+import { createClient } from 'redis';
+
+const publishClient = createClient();
+publishClient.connect();
+
+const subscribeClient = createClient();
+subscribeClient.connect();
 
 const wss = new WebSocketServer({ port: 8080 });
 
@@ -19,6 +26,11 @@ wss.on('connection', function connection(userSocket) {
 
         if(parsedMessage.type === "SUBSCRIBE") {
             users[id].rooms.push(parsedMessage.room); //storing the room that the user want to subscribe to in users
+        }
+
+        if (parsedMessage.type === "UNSUBSCRIBE") {
+            const roomId = parsedMessage.roomId;
+            users[id].rooms = users[id].rooms.filter((room) => room !== roomId); //removing the room from the user
         }
 
         if(parsedMessage.type === "sendMessage") {
